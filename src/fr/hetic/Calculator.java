@@ -1,26 +1,31 @@
 package fr.hetic;
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * This class represents a calculator that reads operations from a file,
  * performs the operations, and writes the results to another file.
+ * If an operation is invalid, it writes "ERROR" to the result file.
  */
-public class Calculateur {
+public class Calculator {
     public static void main(String[] args) {
-        // The path to the file containing the operations
-        String filePath = "/Users/max/Desktop/hetic/java/TP1/src/fr/hetic/additions.op";
-        // The path to the file where the results will be written
-        String resultPath = "/Users/max/Desktop/hetic/java/TP1/src/fr/hetic/results.res";
+        if (args.length != 1) {
+            System.out.println("Usage: java fr.hetic.Calculateur <path-to-file>");
+            return;
+        }
+        
+        String filePath = args[0];
+        String resultPath = getResultFilePath(filePath);
 
-        // Use try-with-resources to automatically close the resources after use
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath));
-             PrintWriter writer = new PrintWriter(resultPath, "UTF-8")) {
+             PrintWriter writer = new PrintWriter(new FileWriter(resultPath))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                // Process the line and write the result to the file
                 int result = processLine(line);
                 if (result == Integer.MIN_VALUE) {
                     writer.println("ERROR");
@@ -28,18 +33,34 @@ public class Calculateur {
                     writer.println(result);
                 }
             }
+            System.out.println("The result has been written to " + resultPath);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     /**
+     * Generates the result file path based on the input file path.
+     * The result file will be in the same directory as the input file,
+     * and its name will be the same as the input file but with a ".res" extension.
+     *
+     * @param inputFilePath the path to the input file
+     * @return the path to the result file
+     */
+    private static String getResultFilePath(String inputFilePath) {
+        Path path = Paths.get(inputFilePath);
+        String fileName = path.getFileName().toString();
+        String resultFileName = fileName.substring(0, fileName.lastIndexOf('.')) + ".res";
+        return path.getParent().resolve(resultFileName).toString();
+    }
+
+    /**
      * Processes a line from the input file. The line should contain two integers
      * and an operator (+, -, or *) separated by spaces.
+     * If the line is invalid or the operator is unknown, it returns Integer.MIN_VALUE.
      *
      * @param line the line to process
-     * @return the result of the operation
-     * @throws IllegalArgumentException if the line format is invalid
+     * @return the result of the operation or Integer.MIN_VALUE if the line is invalid
      */
     private static int processLine(String line) {
         String[] parts = line.split(" ");

@@ -16,16 +16,16 @@ public class Calculateur {
         String resultPath = "/Users/max/Desktop/hetic/java/TP1/src/fr/hetic/results.res";
 
         // Use try-with-resources to automatically close the resources after use
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath)); // BufferedReader for efficient reading
-             PrintWriter writer = new PrintWriter(resultPath, "UTF-8")) { // PrintWriter for easy writing of text to a file
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath));
+             PrintWriter writer = new PrintWriter(resultPath, "UTF-8")) {
             String line;
             while ((line = reader.readLine()) != null) {
-                try {
-                    // Process each line and write the result to the file
-                    int result = processLine(line);
+                // Process the line and write the result to the file
+                int result = processLine(line);
+                if (result == Integer.MIN_VALUE) {
+                    writer.println("ERROR");
+                } else {
                     writer.println(result);
-                } catch (IllegalArgumentException e) {
-                    System.out.println("ERROR: " + e.getMessage());
                 }
             }
         } catch (IOException e) {
@@ -44,7 +44,7 @@ public class Calculateur {
     private static int processLine(String line) {
         String[] parts = line.split(" ");
         if (parts.length != 3) {
-            throw new IllegalArgumentException("Invalid line format: " + line);
+            return Integer.MIN_VALUE;
         }
         int num1 = Integer.parseInt(parts[0]);
         int num2 = Integer.parseInt(parts[1]);
@@ -57,7 +57,7 @@ public class Calculateur {
             case "*":
                 return num1 * num2;
             default:
-                throw new IllegalArgumentException("Invalid operator: " + operator);
+                return Integer.MIN_VALUE;
         }
     }
 }

@@ -4,8 +4,10 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+
 
 /**
  * This class represents a calculator that reads operations from a file,
@@ -19,8 +21,12 @@ public class Calculator {
             return;
         }
         
-        String filePath = args[0];
-        String resultPath = getResultFilePath(filePath);
+    String filePath = args[0];
+        if (!isValidFilePath(filePath)) {
+            System.out.println("Invalid file path: " + filePath);
+            return;
+        }
+    String resultPath = getResultFilePath(filePath);
 
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath));
              PrintWriter writer = new PrintWriter(new FileWriter(resultPath))) {
@@ -37,6 +43,18 @@ public class Calculator {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Checks if the given file path is valid.
+     * A file path is valid if it exists and is not a directory.
+     *
+     * @param filePath the file path to check
+     * @return true if the file path is valid, false otherwise
+    */
+    private static boolean isValidFilePath(String filePath) {
+        Path path = Paths.get(filePath);
+        return Files.exists(path) && !Files.isDirectory(path);
     }
 
     /**

@@ -1,102 +1,74 @@
 package fr.hetic;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
+import java.io.*;
+import java.nio.file.*;
+import java.util.*;
 
 /**
- * This class represents a calculator that reads operations from a file,
- * performs the operations, and writes the results to another file.
- * If an operation is invalid, it writes "ERROR" to the result file.
+ * The Calculator class processes arithmetic operations from files in a specified directory.
+ * The operations are read from files with the ".op" extension.
+ * The results are written to corresponding files with the ".res" extension.
  */
 public class Calculator {
+    /**
+     * The main method of the Calculator class.
+     * It expects a single argument: the path to the directory containing the files to process.
+     * It walks through the directory, processing each ".op" file it finds.
+     */
     public static void main(String[] args) {
-        if (args.length != 1) {
-            System.out.println("Usage: java fr.hetic.Calculateur <path-to-file>");
-            return;
-        }
-        
-    String filePath = args[0];
-        if (!isValidFilePath(filePath)) {
-            System.out.println("Invalid file path: " + filePath);
-            return;
-        }
-    String resultPath = getResultFilePath(filePath);
+        String SUFFIX_FILE_EXTENSION = ".op";
+        if (args.length != 1) { System.out.println("Usage: java fr.hetic.Calculator <path-to-directory>"); return; }
+        String dirPath = args[0];
+        if (!Files.isDirectory(Paths.get(dirPath))) { System.out.println("Invalid directory path: " + dirPath); return; }
+        try { Files.walk(Paths.get(dirPath)).filter(path -> path.toString().endsWith(SUFFIX_FILE_EXTENSION)).forEach(path -> processFile(path.toString())); } 
+        catch (IOException e) { e.printStackTrace(); }
+    }
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(filePath));
-             PrintWriter writer = new PrintWriter(new FileWriter(resultPath))) {
+    /**
+     * Processes a single file.
+     * It reads each line of the file, processes it as an arithmetic operation, and writes the result to a ".res" file.
+     */
+    private static void processFile(String filePath) {
+        String resultPath = getResultFilePath(filePath);
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath)); PrintWriter writer = new PrintWriter(new FileWriter(resultPath))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 int result = processLine(line);
-                if (result == Integer.MIN_VALUE) {
-                    writer.println("ERROR");
-                } else {
-                    writer.println(result);
-                }
+                writer.println(result == Integer.MIN_VALUE ? "ERROR" : result);
             }
             System.out.println("The result has been written to " + resultPath);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        } catch (IOException e) { e.printStackTrace(); }
     }
 
     /**
-     * Checks if the given file path is valid.
-     * A file path is valid if it exists and is not a directory.
-     *
-     * @param filePath the file path to check
-     * @return true if the file path is valid, false otherwise
-    */
-    private static boolean isValidFilePath(String filePath) {
-        Path path = Paths.get(filePath);
-        return Files.exists(path) && !Files.isDirectory(path);
-    }
-
-    /**
-     * Generates the result file path based on the input file path.
-     * The result file will be in the same directory as the input file,
-     * and its name will be the same as the input file but with a ".res" extension.
-     *
-     * @param inputFilePath the path to the input file
-     * @return the path to the result file
+     * Returns the path to the result file corresponding to a given input file.
+     * The result file has the same name as the input file, but with the ".op" extension replaced by ".res".
      */
     private static String getResultFilePath(String inputFilePath) {
         Path path = Paths.get(inputFilePath);
-        String fileName = path.getFileName().toString();
-        String resultFileName = fileName.substring(0, fileName.lastIndexOf('.')) + ".res";
+        String resultFileName = path.getFileName().toString().replaceFirst("\\.op$", ".res");
         return path.getParent().resolve(resultFileName).toString();
     }
 
     /**
-     * Processes a line from the input file. The line should contain two integers
-     * and an operator (+, -, or *) separated by spaces.
-     * If the line is invalid or the operator is unknown, it returns Integer.MIN_VALUE.
-     *
-     * @param line the line to process
-     * @return the result of the operation or Integer.MIN_VALUE if the line is invalid
+     * Processes a single line as an arithmetic operation.
+     * The line should contain two integers and an operator, separated by spaces.
+     * The operator can be "+", "-", or "*".
+     * If the line is not in this format, or if the operator is not one of the allowed ones, it returns Integer.MIN_VALUE.
      */
     private static int processLine(String line) {
-        String[] parts = line.split(" ");
-        if (parts.length != 3) {
-            return Integer.MIN_VALUE;
-        }
-        int num1 = Integer.parseInt(parts[0]);
-        int num2 = Integer.parseInt(parts[1]);
+        String[] parts = line.split("\\s+");
+        if (parts.length != 3) return Integer.MIN_VALUE;
+        int num1, num2;
+        try { num1 = Integer.parseInt(parts[0]); num2 = Integer.parseInt(parts[1]); } 
+        catch (NumberFormatException e) { return Integer.MIN_VALUE; }
         String operator = parts[2];
+        List<String> validOperators = Arrays.asList("+", "-", "*", "/");
+        if (!validOperators.contains(operator)) { System.out.println("Invalid operator: " + operator); return Integer.MIN_VALUE; }
         switch (operator) {
-            case "+":
-                return num1 + num2;
-            case "-":
-                return num1 - num2;
-            case "*":
-                return num1 * num2;
-            default:
-                return Integer.MIN_VALUE;
+            case "+": return num1 + num2;
+            case "-": return num1 - num2;
+            case "*": return num1 * num2;
+            default: return Integer.MIN_VALUE;
         }
     }
 }

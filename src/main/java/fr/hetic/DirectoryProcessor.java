@@ -16,4 +16,8 @@ public class DirectoryProcessor {
         try { Files.walk(Paths.get(dirPath)).filter(path -> path.toString().endsWith(SUFFIX_FILE_EXTENSION)).forEach(path -> fileProcessor.process(path.toString())); } 
         catch (IOException e) { e.printStackTrace(); }
     }
+    
+        public FileProcessor getFileProcessor() {
+            return fileProcessor;
+    }
 }

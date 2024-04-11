@@ -1,7 +1,7 @@
 package fr.hetic;
 
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.assertj.core.api.Assertions.*;
 
 public class OperationFactoryTest {
 
@@ -18,12 +18,18 @@ public class OperationFactoryTest {
 
     private void assertOperation(String operator, int operand1, int operand2, int expected) {
         Operation operation = operationFactory.getOperation(operator);
-        assertNotNull("Operation should not be null for operator: " + operator, operation);
-        assertEquals("Unexpected result for " + operator, expected, operation.execute(operand1, operand2));
+        assertThat(operation)
+            .as("Operation should not be null for operator: %s", operator)
+            .isNotNull();
+        assertThat(operation.execute(operand1, operand2))
+            .as("Unexpected result for %s", operator)
+            .isEqualTo(expected);
     }
 
     private void assertOperationNotFound(String operator) {
         Operation operation = operationFactory.getOperation(operator);
-        assertNull("Operation should be null for unknown operator: " + operator, operation);
+        assertThat(operation)
+            .as("Operation should be null for unknown operator: %s", operator)
+            .isNull();
     }
 }

@@ -1,17 +1,39 @@
 package fr.hetic;
 
-public class Processor {
-    private final DatabaseProcessor dbProcessor = new DatabaseProcessor(new OperationFactory());
-    private final DirectoryProcessor dirProcessor = new DirectoryProcessor(new FileProcessor(new OperationFactory()));
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
 
-    public void process(String[] args) {
-        if (args.length > 0) {
-            switch (args[0]) {
-                case "db" -> dbProcessor.processDatabase();
-                default -> dirProcessor.process(args[0]);
-            }
-        } else {
-            System.out.println("Please provide an argument: 'db' for database processing or a file path for file processing.");
+public class Processor {
+    private final Map<String, ProcessorFunction> processors = new HashMap<>();
+
+    @FunctionalInterface
+    public interface ProcessorFunction {
+        void process(String arg);
+    }
+
+    public Processor() {
+        Properties properties = new Properties();
+        try {
+            properties.load(new FileInputStream("/Users/max/Desktop/hetic/java/maven-project/my-app/src/main/ressources/application.properties"));
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load properties file", e);
         }
+
+        String implementation = properties.getProperty("implementation");
+        String filePath = properties.getProperty("filePath");
+
+        OperationFactory operationFactory = new OperationFactory();
+        processors.put("JDBC", (arg) -> new DatabaseProcessor(operationFactory).processDatabase());
+        processors.put("FILE", (arg) -> new DirectoryProcessor(new FileProcessor(operationFactory)).process(arg));
+
+        process(implementation, filePath);
+    }
+
+    public void process(String implementation, String filePath) {
+        ProcessorFunction processor = processors.getOrDefault(implementation, (arg) -> System.out.println("Invalid implementation or implementation not supported."));
+        processor.process(filePath);
     }
 }

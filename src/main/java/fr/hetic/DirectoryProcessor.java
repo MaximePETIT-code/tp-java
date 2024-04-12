@@ -17,7 +17,7 @@ public class DirectoryProcessor {
         catch (IOException e) { e.printStackTrace(); }
     }
     
-        public FileProcessor getFileProcessor() {
-            return fileProcessor;
+    public FileProcessor getFileProcessor() {
+        return fileProcessor;
     }
 }

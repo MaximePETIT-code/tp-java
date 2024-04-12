@@ -15,8 +15,7 @@ public class FileProcessor {
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath)); PrintWriter writer = new PrintWriter(new FileWriter(resultPath))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                int result = processLine(line);
-                writer.println(result == Integer.MIN_VALUE ? "ERROR" : result);
+                processLineAndWriteResult(line, writer);
             }
             System.out.println("The result has been written to " + resultPath);
         } catch (IOException e) { e.printStackTrace(); }
@@ -28,7 +27,12 @@ public class FileProcessor {
         return path.getParent().resolve(resultFileName).toString();
     }
 
-    private int processLine(String line) {
+    public void processLineAndWriteResult(String line, PrintWriter writer) {
+        int result = processLine(line);
+        writer.println(result == Integer.MIN_VALUE ? "ERROR" : result);
+    }
+
+    public int processLine(String line) {
         String[] parts = line.split("\\s+");
         if (parts.length != 3) return Integer.MIN_VALUE;
         int num1, num2;
@@ -36,7 +40,8 @@ public class FileProcessor {
         catch (NumberFormatException e) { return Integer.MIN_VALUE; }
         String operator = parts[2];
         Operation operation = operationFactory.getOperation(operator);
-    if (operation == null) { System.out.println("Invalid operator: " + operator); return Integer.MIN_VALUE; }
+        if (operation == null) { System.out.println("Invalid operator: " + operator); return Integer.MIN_VALUE; }
         return operation.execute(num1, num2);
     }
+    
 }
